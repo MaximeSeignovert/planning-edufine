@@ -147,12 +147,14 @@ button:hover {
     display: flex;
     flex: 1;
     overflow-x: auto;
+    scroll-snap-type: x proximity;
 }
 
 .day-column {
     flex: 1;
     min-width: 150px;
     border-right: 1px solid #e0e0e0;
+    scroll-snap-align: start;
 }
 
 .day-column:last-child {
@@ -276,16 +278,165 @@ button:hover {
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    header {
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+
     .config-section {
         flex-direction: column;
     }
 
+    .login-section input,
+    button {
+        font-size: 16px; /* Évite le zoom automatique sur iOS */
+    }
+
+    .week-navigation {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .week-navigation button {
+        width: 100%;
+        padding: 12px;
+    }
+
+    #weekRange {
+        font-size: 14px;
+        text-align: center;
+    }
+
+    .calendar-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .time-column {
+        width: 60px;
+    }
+
+    .time-slot {
+        height: 60px;
+        font-size: 11px;
+        padding: 2px;
+    }
+
     .day-column {
-        min-width: 120px;
+        min-width: 100px;
+        flex-shrink: 0;
+    }
+
+    .day-header {
+        height: 50px;
+        padding: 8px 4px;
+    }
+
+    .day-name {
+        font-size: 12px;
+    }
+
+    .day-date {
+        font-size: 11px;
     }
 
     .event {
-        font-size: 10px;
+        font-size: 9px;
         padding: 2px 4px;
+        left: 1px;
+        right: 1px;
+        border-left-width: 2px;
+    }
+
+    .event-name {
+        font-size: 10px;
+    }
+
+    .event-time,
+    .event-classroom {
+        font-size: 9px;
+    }
+
+    .account-info {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .logout-btn {
+        width: 100%;
+    }
+}
+
+/* Amélioration pour très petits écrans */
+@media (max-width: 480px) {
+    .container {
+        padding: 5px;
+    }
+
+    header {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+
+    .time-column {
+        width: 50px;
+    }
+
+    .time-slot {
+        font-size: 10px;
+    }
+
+    .day-column {
+        min-width: 85px;
+    }
+
+    .day-header {
+        height: 45px;
+        padding: 5px 2px;
+    }
+
+    .day-name {
+        font-size: 11px;
+    }
+
+    .day-date {
+        font-size: 10px;
+    }
+
+    .event {
+        font-size: 8px;
+        padding: 1px 2px;
+    }
+
+    .event-name {
+        font-size: 9px;
+    }
+
+    .event-time,
+    .event-classroom {
+        font-size: 8px;
+    }
+
+    button {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+
+    .week-navigation button {
+        padding: 10px;
+        font-size: 14px;
     }
 }
