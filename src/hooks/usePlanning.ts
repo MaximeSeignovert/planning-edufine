@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react'
 import type { ApiResponse } from './useAuth'
 
 export interface Course {
-  ID: number
+  ID: number | string
   NAME: string
   START: string
   END: string
   CLASSROOM?: string
+  PROFESSOR?: string
   STUDENT_PRESENCE?: boolean
-  STUDENT_ABSENCE_ID?: number
+  STUDENT_ABSENCE_ID?: number | null
   STUDENT_IS_JUSTIFICATED?: boolean
   JUSTIFIED?: boolean
 }

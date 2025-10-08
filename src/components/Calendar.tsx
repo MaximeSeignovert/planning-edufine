@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Card } from './ui/card'
 import type { Course } from '~/hooks/usePlanning'
+import type { Professor } from '~/hooks/useProfessorsQuery'
 
 interface CalendarProps {
   courses: Course[]
   weekStart: Date
+  professorsMap?: Map<string, Professor>
 }
 
 const DAYS_OF_WEEK = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
@@ -14,13 +16,31 @@ function formatTime(date: Date): string {
 }
 
 function getCourseStatus(course: Course): string {
-  if (course.STUDENT_PRESENCE) return 'bg-emerald-500 border-l-emerald-700'
-  if (course.STUDENT_IS_JUSTIFICATED || course.JUSTIFIED) return 'bg-orange-500 border-l-orange-700'
-  if (course.STUDENT_ABSENCE_ID) return 'bg-red-500 border-l-red-700'
+  const now = new Date()
+  const courseEnd = new Date(course.END)
+  const isPast = courseEnd < now
+
+  // Présent
+  if (course.STUDENT_PRESENCE === true) return 'bg-emerald-500 border-l-emerald-700'
+
+  // Absent non justifié (uniquement pour les cours passés)
+  if (isPast && course.STUDENT_PRESENCE === false && !course.STUDENT_IS_JUSTIFICATED && !course.JUSTIFIED) {
+    return 'bg-red-500 border-l-red-700'
+  }
+
+  // Absent justifié (uniquement pour les cours passés)
+  if (isPast && (course.STUDENT_IS_JUSTIFICATED || course.JUSTIFIED)) {
+    return 'bg-orange-500 border-l-orange-700'
+  }
+
+  // Absence enregistrée (uniquement pour les cours passés)
+  if (isPast && course.STUDENT_ABSENCE_ID) return 'bg-red-500 border-l-red-700'
+
+  // Pas encore de statut (cours à venir ou pas encore signé)
   return 'bg-blue-500 border-l-blue-700'
 }
 
-export function Calendar({ courses, weekStart }: CalendarProps) {
+export function Calendar({ courses, weekStart, professorsMap = new Map() }: CalendarProps) {
   const [minHour, setMinHour] = useState(8)
   const [maxHour, setMaxHour] = useState(18)
   const [currentTimePosition, setCurrentTimePosition] = useState<number | null>(null)
@@ -160,6 +180,8 @@ export function Calendar({ courses, weekStart }: CalendarProps) {
                     const endHour =
                       endDate.getHours() + endDate.getMinutes() / 60
                     const duration = endHour - startHour
+                    const professor = course.PROFESSOR ? professorsMap.get(course.PROFESSOR) : null
+                    const professorName = professor ? `${professor.FIRSTNAME} ${professor.LASTNAME}` : ''
 
                     return (
                       <div
@@ -169,11 +191,16 @@ export function Calendar({ courses, weekStart }: CalendarProps) {
                           top: `${(startHour - minHour) * 60}px`,
                           height: `${duration * 60}px`,
                         }}
-                        title={`${course.NAME}\n${formatTime(startDate)} - ${formatTime(endDate)}\n${course.CLASSROOM ? 'Salle ' + course.CLASSROOM : ''}`}
+                        title={`${course.NAME}\n${professorName}\n${formatTime(startDate)} - ${formatTime(endDate)}\n${course.CLASSROOM ? 'Salle ' + course.CLASSROOM : ''}`}
                       >
                         <div className="font-bold mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px] md:text-[11px]">
                           {course.NAME}
                         </div>
+                        {professorName && (
+                          <div className="opacity-90 text-[8px] md:text-[10px] whitespace-nowrap overflow-hidden text-ellipsis">
+                            {professorName}
+                          </div>
+                        )}
                         <div className="opacity-90 text-[8px] md:text-[10px]">
                           {formatTime(startDate)} - {formatTime(endDate)}
                         </div>

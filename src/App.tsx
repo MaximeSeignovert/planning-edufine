@@ -5,6 +5,7 @@ import { Calendar } from './components/Calendar'
 import { useAuth } from './hooks/useAuth'
 import { useAllCoursesQuery } from './hooks/useAllCoursesQuery'
 import { useWeeksWithCourses } from './hooks/useWeeksWithCourses'
+import { useProfessorsQuery } from './hooks/useProfessorsQuery'
 
 function getWeekStart(date: Date): Date {
   const d = new Date(date)
@@ -19,15 +20,38 @@ function App() {
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()))
   const { bearerToken, userInfo, isLoading, error, login, logout } = useAuth()
 
-  // Charge tous les cours de l'année scolaire avec TanStack Query
+  // Charge les cours 6 mois avant et 6 mois après la semaine actuelle
   const {
     data: allCourses = [],
     isLoading: planningLoading,
     error: planningError,
-  } = useAllCoursesQuery({ bearerToken })
+  } = useAllCoursesQuery({ bearerToken, currentWeek: weekStart })
 
   // Détermine quelles semaines contiennent des cours
   const weeksWithCourses = useWeeksWithCourses(allCourses)
+
+  // Extrait tous les IDs de professeurs uniques
+  const professorIds = useMemo(() => {
+    const ids = new Set<string>()
+    allCourses.forEach(course => {
+      if (course.PROFESSOR) {
+        ids.add(course.PROFESSOR)
+      }
+    })
+    return Array.from(ids)
+  }, [allCourses])
+
+  // Charge les données des professeurs
+  const { data: professors = [] } = useProfessorsQuery(bearerToken, professorIds)
+
+  // Crée un map pour accès rapide aux professeurs par ID
+  const professorsMap = useMemo(() => {
+    const map = new Map()
+    professors.forEach(prof => {
+      map.set(prof.ID, prof)
+    })
+    return map
+  }, [professors])
 
   // Filtre les cours de la semaine actuelle pour le calendrier
   const currentWeekCourses = useMemo(() => {
@@ -72,7 +96,11 @@ function App() {
           {planningError instanceof Error ? planningError.message : 'Erreur lors du chargement'}
         </div>
       ) : (
-        <Calendar courses={currentWeekCourses} weekStart={weekStart} />
+        <Calendar
+          courses={currentWeekCourses}
+          weekStart={weekStart}
+          professorsMap={professorsMap}
+        />
       )}
     </div>
   )
