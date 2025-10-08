@@ -1,43 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Planning Edusign</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Planning Edusign</h1>
-            <div id="loginSection" class="config-section login-section">
-                <input type="email" id="email" placeholder="Email" />
-                <input type="password" id="password" placeholder="Mot de passe" />
-                <button id="loginBtn">Se connecter</button>
-            </div>
-            <div id="accountSection" class="config-section account-section" style="display: none;">
-                <div class="account-info">
-                    <span id="accountName"></span>
-                    <button id="logoutBtn" class="logout-btn">Se déconnecter</button>
-                </div>
-            </div>
-            <div class="week-navigation">
-                <button id="prevWeek">&lt; Semaine précédente</button>
-                <span id="weekRange"></span>
-                <button id="nextWeek">Semaine suivante &gt;</button>
-            </div>
-        </header>
-
-        <div class="calendar-container">
-            <div class="time-column">
-                <div class="time-header"></div>
-                <div class="time-slots"></div>
-            </div>
-            <div class="days-container" id="daysContainer"></div>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
-</body>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
