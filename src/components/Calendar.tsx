@@ -45,6 +45,7 @@ export function Calendar({ courses, weekStart, professorsMap = new Map() }: Cale
   const [maxHour, setMaxHour] = useState(18)
   const [currentTimePosition, setCurrentTimePosition] = useState<number | null>(null)
   const [currentDayIndex, setCurrentDayIndex] = useState<number | null>(null)
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
 
   // Calculer les heures min et max
   useEffect(() => {
@@ -114,6 +115,28 @@ export function Calendar({ courses, weekStart, professorsMap = new Map() }: Cale
 
   const hourRange = maxHour - minHour + 1
   const timeSlots = Array.from({ length: hourRange }, (_, i) => minHour + i)
+  const selectedProfessor = selectedCourse?.PROFESSOR
+    ? professorsMap.get(selectedCourse.PROFESSOR)
+    : null
+  const selectedProfessorName = selectedProfessor
+    ? `${selectedProfessor.FIRSTNAME} ${selectedProfessor.LASTNAME}`
+    : 'Non renseigné'
+
+  function getCourseStatusLabel(course: Course): string {
+    const now = new Date()
+    const courseEnd = new Date(course.END)
+    const isPast = courseEnd < now
+
+    if (course.STUDENT_PRESENCE === true) return 'Présent'
+    if (isPast && course.STUDENT_PRESENCE === false && !course.STUDENT_IS_JUSTIFICATED && !course.JUSTIFIED) {
+      return 'Absent non justifié'
+    }
+    if (isPast && (course.STUDENT_IS_JUSTIFICATED || course.JUSTIFIED)) {
+      return 'Absent justifié'
+    }
+    if (isPast && course.STUDENT_ABSENCE_ID) return 'Absent'
+    return 'À venir / en attente'
+  }
 
   return (
     <Card className="overflow-hidden">
@@ -192,6 +215,7 @@ export function Calendar({ courses, weekStart, professorsMap = new Map() }: Cale
                           height: `${duration * 60}px`,
                         }}
                         title={`${course.NAME}\n${professorName}\n${formatTime(startDate)} - ${formatTime(endDate)}\n${course.CLASSROOM ? 'Salle ' + course.CLASSROOM : ''}`}
+                        onClick={() => setSelectedCourse(course)}
                       >
                         <div className="font-bold mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px] md:text-[11px]">
                           {course.NAME}
@@ -229,6 +253,69 @@ export function Calendar({ courses, weekStart, professorsMap = new Map() }: Cale
           })}
         </div>
       </div>
+
+      {selectedCourse && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4"
+          onClick={() => setSelectedCourse(null)}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              setSelectedCourse(null)
+            }
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="course-details-title"
+          tabIndex={-1}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h3 id="course-details-title" className="text-lg font-semibold text-slate-900">
+                  {selectedCourse.NAME}
+                </h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  {getCourseStatusLabel(selectedCourse)}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="rounded-md px-2 py-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                onClick={() => setSelectedCourse(null)}
+                aria-label="Fermer la fenêtre de détails"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-3 text-sm text-slate-700">
+              <div className="flex justify-between gap-3 border-b pb-2">
+                <span className="text-slate-500">Début</span>
+                <span className="font-medium">{new Date(selectedCourse.START).toLocaleString('fr-FR')}</span>
+              </div>
+              <div className="flex justify-between gap-3 border-b pb-2">
+                <span className="text-slate-500">Fin</span>
+                <span className="font-medium">{new Date(selectedCourse.END).toLocaleString('fr-FR')}</span>
+              </div>
+              <div className="flex justify-between gap-3 border-b pb-2">
+                <span className="text-slate-500">Professeur</span>
+                <span className="font-medium text-right">{selectedProfessorName}</span>
+              </div>
+              <div className="flex justify-between gap-3 border-b pb-2">
+                <span className="text-slate-500">Salle</span>
+                <span className="font-medium">{selectedCourse.CLASSROOM || 'Non renseignée'}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">ID du cours</span>
+                <span className="font-medium">{String(selectedCourse.ID)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   )
 }
