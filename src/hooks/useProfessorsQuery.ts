@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import type { ApiResponse } from './useAuth'
+import { refreshAccessTokenWithStoredRefreshToken } from '../lib/authTokens'
 
 export interface Professor {
   ID: string
@@ -30,6 +31,28 @@ async function fetchProfessors(
     },
     body: JSON.stringify({ ids: professorIds }),
   })
+
+  if (response.status === 401 || response.status === 403) {
+    const refreshedTokens = await refreshAccessTokenWithStoredRefreshToken()
+    if (refreshedTokens?.accessToken) {
+      const retryResponse = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${refreshedTokens.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: professorIds }),
+      })
+
+      if (retryResponse.ok) {
+        const retryData: ApiResponse<Professor[]> = await retryResponse.json()
+        if (retryData.status === 'success' && Array.isArray(retryData.result)) {
+          return retryData.result
+        }
+        throw new Error('Format de réponse invalide')
+      }
+    }
+  }
 
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) {

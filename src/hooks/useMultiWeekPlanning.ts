@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { Course } from './usePlanning'
 import type { ApiResponse } from './useAuth'
+import { refreshAccessTokenWithStoredRefreshToken } from '../lib/authTokens'
 
 function getWeekStart(date: Date): Date {
   const d = new Date(date)
@@ -49,6 +50,27 @@ export function useMultiWeekPlanning(bearerToken: string, currentWeek: Date, wee
             'Content-Type': 'application/json',
           },
         })
+
+        if (response.status === 401 || response.status === 403) {
+          const refreshedTokens = await refreshAccessTokenWithStoredRefreshToken()
+          if (refreshedTokens?.accessToken) {
+            const retryResponse = await fetch(url, {
+              headers: {
+                Authorization: `Bearer ${refreshedTokens.accessToken}`,
+                'Content-Type': 'application/json',
+              },
+            })
+
+            if (retryResponse.ok) {
+              const retryData: ApiResponse<Course[]> = await retryResponse.json()
+              if (retryData.status === 'success' && Array.isArray(retryData.result)) {
+                setAllCourses(retryData.result)
+                return
+              }
+              throw new Error('Format de réponse invalide')
+            }
+          }
+        }
 
         if (!response.ok) {
           if (response.status === 401 || response.status === 403) {
